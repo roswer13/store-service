@@ -1,8 +1,6 @@
-from django.urls import path
-from .views import create
-
 
 urlpatterns = [
-    path('', create),
+    # path('', create),
+    # path('/login', login)
     # Add other app URLs here
 ]
