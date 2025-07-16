@@ -1,3 +1,4 @@
+import os
 from django.conf import settings
 
 from rest_framework.decorators import api_view, permission_classes
@@ -65,3 +66,27 @@ def get_categories(request):
         all_categories_data.append(category_data)
 
     return Response(all_categories_data, status=status.HTTP_200_OK)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete(request, id_category):
+    try:
+        category = Category.objects.get(id=id_category)
+        if category.image:
+            image_path = category.image.lstrip('/')
+            image_full_path = os.path.join(settings.MEDIA_ROOT, image_path.replace('media/', ''))
+
+            if default_storage.exists(image_full_path):
+                default_storage.delete(image_full_path)
+
+        category.delete()
+        return Response(True, status=status.HTTP_204_NO_CONTENT)
+
+    except Category.DoesNotExist:
+        error_response = {
+            "message": "Category not found",
+            "status": status.HTTP_404_NOT_FOUND
+        }
+        return Response(error_response, status=status.HTTP_404_NOT_FOUND)
+
