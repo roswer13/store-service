@@ -90,3 +90,56 @@ def delete(request, id_category):
         }
         return Response(error_response, status=status.HTTP_404_NOT_FOUND)
 
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update(request, id_category):
+
+    try:
+
+        category = Category.objects.get(id=id_category)
+        serializer = CategorySerializer(category, data=request.data, partial=True)
+
+        if not serializer.is_valid():
+            error_messages = []
+            for field, errors in serializer.errors.items():
+                for error in errors:
+                    error_messages.append(f"{field}: {error}")
+
+            error_response = {
+                "message": error_messages,
+                "status": status.HTTP_400_BAD_REQUEST
+            }
+            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
+
+        old_image_path = None
+        if category.image:
+            old_image_path = category.image.lstrip('/').replace('media/', '')
+
+        serializer.save()
+
+        if 'file' in request.FILES and old_image_path:
+            old_image_full_path = os.path.join(settings.MEDIA_ROOT, old_image_path)
+            if default_storage.exists(old_image_full_path):
+                default_storage.delete(old_image_full_path)
+
+            image = request.FILES['file']
+            file_path = f'uploads/categories/{category.id}/{image.name}'
+            save_path = default_storage.save(file_path, ContentFile(image.read()))
+            category.image = default_storage.url(save_path)
+            category.save()
+
+        updated_category = CategorySerializer(category).data
+        updated_category.pop('file', None)  # Remove the file field from the response
+        return Response({
+            **updated_category,
+            "image": f"http://{settings.GLOBAL_IP}:{settings.GLOBAL_HOST}{category.image}" if category.image else None
+        }, status=status.HTTP_200_OK)
+
+    except Category.DoesNotExist:
+        error_response = {
+            "message": "Category not found",
+            "status": status.HTTP_404_NOT_FOUND
+        }
+        return Response(error_response, status=status.HTTP_404_NOT_FOUND)
+
