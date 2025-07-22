@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-inq3!t+)m(%6*gat%vbk#n$ws^la38gq&xuuco*45$_cv0$pee
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-GLOBAL_IP = '192.168.1.131'
+GLOBAL_IP = '192.168.1.132'
 GLOBAL_HOST = '3000'
 ALLOWED_HOSTS = [GLOBAL_IP]
 
@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'users',
     'authentication',
     'roles',
-    'categories'
+    'categories',
+    'products',
 ]
 
 MIDDLEWARE = [
